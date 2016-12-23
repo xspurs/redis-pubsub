@@ -14,42 +14,45 @@ import logging.config
 import logging
 
 
-# port to serve
-define("port", default=8000, help="run on the given port", type=int)
+# server host
+define('host', default='0.0.0.0', help='run on the given host', type=str)
+# server port
+define('port', default=8000, help='run on the given port', type=int)
 # redis host
-define("redis_host", default='127.0.0.1', help="the redis host to connect")
+define('redis_host', default='127.0.0.1', help='the redis host to connect')
 # redis port
-define("redis_port", default=6379, help="the redis port to use", type=int)
+define('redis_port', default=6379, help='the redis port to use', type=int)
 # redis db(0 ~ 15)
-define("redis_db", default=0, help="the redis db to use", type=int)
+define('redis_db', default=0, help='the redis db to use', type=int)
 # redis password
-define("redis_password", default=None, help="the redis password use to authenticate")
+define('redis_password', default=None, help='the redis password use to authenticate')
 # channel to publish/subscribe
-define("redis_channel", default="gChannel", help="the redis channel to pub & sub")
+define('redis_channel', default='gChannel', help='the redis channel to pub & sub')
 
-
-#log_config_file_path = path.join(path.dirname(path.abspath(__file__)), 'logging.conf')
-#logging.config.fileConfig(log_config_file_path)
 
 logger = logging.getLogger('root')
+# handler that log to file
 file_handler = logging.FileHandler('./server.log')
-stream_handler = logging.StreamHandler(stdout)
 file_handler.setLevel(logging.INFO)
+# handler that log to stdout
+stream_handler = logging.StreamHandler(stdout)
 stream_handler.setLevel(logging.INFO)
-logger.addHandler(file_handler)  # , stream_handler)
-logger.addHandler(stream_handler)  # , stream_handler)
+# add handlers, log to file and stdout simultaneously
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
 
 # extends tornado.web.Application
 class Application(tornado.web.Application):
 	def __init__(self):
+		# register tornado's RequestHandler to designated context path
 		handlers = [
-			(r"/publish", PublishHandler),
-			(r"/subscribe", SubscribeHandler), 
-			(r"/", IndexHandler),
+			(r'/publish', PublishHandler),
+			(r'/subscribe', SubscribeHandler), 
+			(r'/', IndexHandler),
         	]
 		settings = dict(
-			template_path=path.join(path.dirname(__file__), "templates"),
-			static_path=path.join(path.dirname(__file__), "static"),
+			template_path=path.join(path.dirname(__file__), 'templates'),
+			static_path=path.join(path.dirname(__file__), 'static'),
 		)
 		super(Application, self).__init__(handlers, **settings)
 		# redis singeleton to share among handlers
@@ -58,8 +61,6 @@ class Application(tornado.web.Application):
 		self.pubsub = self.redis.pubsub(ignore_subscribe_messages=True)
 		self.pubsub.subscribe(options.redis_channel)
 		# logger to record log
-		#self.logger = logging.getLogger('errorHandler')
-
 		self.logger = logger
 
 
@@ -80,11 +81,11 @@ class BaseHandler(tornado.web.RequestHandler):
 class IndexHandler(BaseHandler):
 	def get(self):
 		self.logger.info('===== access index-handler =====')
+		self.logger.error(isinstance(self, tornado.web.RequestHandler))
 		self.render('subscribe.html')
 
 
 # publish message into channel
-# TODO 改造该接口，可以传入一个channel进行publish
 class PublishHandler(BaseHandler):
 	def post(self):
 		# set CORS for cross-origin request
@@ -133,8 +134,8 @@ def main():
 	tornado.options.parse_command_line()
 	# create http server
 	http_server = tornado.httpserver.HTTPServer(Application())
-	# serve the port pass by command line(or default 8000)
-	http_server.listen(options.port)
+	# serve the host and port pass by command line(or default 0.0.0.0:8000)
+	http_server.listen(options.port, options.host)
 	# start http server
 	tornado.ioloop.IOLoop.current().start()
 
@@ -143,4 +144,4 @@ if __name__ == '__main__':
 	try:
 		main()
 	except KeyboardInterrupt as ki:
-		print("Server Terminated By <C-c>.")
+		print('Server Terminated By <C-c>.')

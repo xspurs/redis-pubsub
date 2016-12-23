@@ -1,0 +1,6 @@
+-f http://pypi.douban.com/simple/
+autobahn==0.17.0
+redis==2.10.5
+six==1.10.0
+tornado==4.4.2
+txaio==2.5.2

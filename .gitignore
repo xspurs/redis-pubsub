@@ -1,3 +1,4 @@
 *.log
 *.bak
 logging.conf
+__pycache__/*
