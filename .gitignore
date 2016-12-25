@@ -2,3 +2,4 @@
 *.bak
 logging.conf
 __pycache__/*
+.idea/*
